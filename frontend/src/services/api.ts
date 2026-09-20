@@ -223,6 +223,20 @@ export const galleryApi = {
     return data;
   },
 
+  uploadMedia: async (eventId: string, files: File[], caption?: string, sortOrder?: number): Promise<GalleryMedia | GalleryMedia[]> => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+    if (caption) formData.append('caption', caption);
+    if (sortOrder !== undefined) formData.append('sortOrder', String(sortOrder));
+
+    const { data } = await api.post<GalleryMedia | GalleryMedia[]>(`/gallery/events/${eventId}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+
   updateMedia: async (mediaId: string, formData: Partial<GalleryMediaFormData>): Promise<GalleryMedia> => {
     const { data } = await api.put<GalleryMedia>(`/gallery/media/${mediaId}`, formData);
     return data;

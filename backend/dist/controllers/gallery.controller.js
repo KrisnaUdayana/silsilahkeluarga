@@ -3,9 +3,54 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteGalleryMedia = exports.updateGalleryMedia = exports.createGalleryMedia = exports.deleteGalleryEvent = exports.updateGalleryEvent = exports.createGalleryEvent = exports.deleteGalleryYear = exports.updateGalleryYear = exports.createGalleryYear = exports.getGalleryYears = void 0;
+exports.deleteGalleryMedia = exports.uploadGalleryMedia = exports.updateGalleryMedia = exports.createGalleryMedia = exports.deleteGalleryEvent = exports.updateGalleryEvent = exports.createGalleryEvent = exports.deleteGalleryYear = exports.updateGalleryYear = exports.createGalleryYear = exports.getGalleryYears = exports.galleryUpload = void 0;
+const multer_1 = __importDefault(require("multer"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const http_1 = require("../utils/http");
+const safeUnlink = (filePath) => {
+    try {
+        if (fs_1.default.existsSync(filePath)) {
+            fs_1.default.unlinkSync(filePath);
+        }
+    }
+    catch (error) {
+        console.error('Failed to delete file:', error);
+    }
+};
+const storage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = process.env.UPLOAD_DIR || './uploads';
+        if (!fs_1.default.existsSync(uploadDir)) {
+            fs_1.default.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path_1.default.extname(file.originalname);
+        const filename = `${crypto_1.default.randomUUID()}${ext}`;
+        cb(null, filename);
+    }
+});
+const galleryFileFilter = (req, file, cb) => {
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska', 'video/ogg', 'video/3gpp'];
+    if (allowedImageTypes.includes(file.mimetype) || allowedVideoTypes.includes(file.mimetype)) {
+        cb(null, true);
+    }
+    else {
+        cb(new Error('Tipe file tidak diizinkan. Gunakan format gambar (JPG, PNG, WebP, GIF) atau video (MP4, WebM, MOV).'));
+    }
+};
+exports.galleryUpload = (0, multer_1.default)({
+    storage,
+    fileFilter: galleryFileFilter,
+    limits: {
+        fileSize: parseInt(process.env.MAX_GALLERY_FILE_SIZE || '52428800') // 50MB default
+    }
+});
 const galleryInclude = {
     events: {
         orderBy: { sortOrder: 'asc' },
@@ -269,12 +314,72 @@ const updateGalleryMedia = async (req, res) => {
     }
 };
 exports.updateGalleryMedia = updateGalleryMedia;
+const uploadGalleryMedia = async (req, res) => {
+    try {
+        const galleryEventId = String(req.params.eventId);
+        const { caption, sortOrder } = req.body;
+        const event = await prisma_1.default.galleryEvent.findUnique({
+            where: { id: galleryEventId },
+            include: { media: true }
+        });
+        if (!event) {
+            if (req.files && Array.isArray(req.files)) {
+                req.files.forEach((f) => safeUnlink(f.path));
+            }
+            else if (req.file) {
+                safeUnlink(req.file.path);
+            }
+            return res.status(404).json({ error: 'Acara galeri tidak ditemukan.' });
+        }
+        const files = req.files || (req.file ? [req.file] : []);
+        if (!files || files.length === 0) {
+            return (0, http_1.validationError)(res, 'File foto atau video tidak ditemukan.');
+        }
+        const initialSortOrder = parseSortOrder(sortOrder, event.media.length + 1) || 1;
+        const createdMediaList = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const isVideo = file.mimetype.startsWith('video/');
+            const mediaType = isVideo ? 'VIDEO' : 'PHOTO';
+            const fileUrl = `/uploads/${file.filename}`;
+            const itemCaption = caption || (files.length === 1 ? '' : path_1.default.parse(file.originalname).name);
+            const media = await prisma_1.default.galleryMedia.create({
+                data: {
+                    galleryEventId,
+                    mediaType,
+                    url: fileUrl,
+                    caption: itemCaption,
+                    thumbnailUrl: '',
+                    sortOrder: initialSortOrder + i
+                }
+            });
+            createdMediaList.push(media);
+        }
+        res.status(201).json(createdMediaList.length === 1 ? createdMediaList[0] : createdMediaList);
+    }
+    catch (error) {
+        console.error('Upload gallery media error:', error);
+        if (req.files && Array.isArray(req.files)) {
+            req.files.forEach((f) => safeUnlink(f.path));
+        }
+        else if (req.file) {
+            safeUnlink(req.file.path);
+        }
+        res.status(500).json({ error: 'Terjadi kesalahan saat mengunggah media galeri.' });
+    }
+};
+exports.uploadGalleryMedia = uploadGalleryMedia;
 const deleteGalleryMedia = async (req, res) => {
     try {
         const id = String(req.params.mediaId);
         const existing = await prisma_1.default.galleryMedia.findUnique({ where: { id } });
         if (!existing) {
             return res.status(404).json({ error: 'Media galeri tidak ditemukan.' });
+        }
+        // Unlink local file if stored in /uploads
+        if (existing.url && existing.url.startsWith('/uploads/')) {
+            const filePath = path_1.default.join(process.env.UPLOAD_DIR || './uploads', path_1.default.basename(existing.url));
+            safeUnlink(filePath);
         }
         await prisma_1.default.galleryMedia.delete({ where: { id } });
         res.json({ message: 'Media galeri berhasil dihapus.' });

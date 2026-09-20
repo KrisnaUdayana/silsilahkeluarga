@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { CalendarDays, Edit, Image, Plus, Trash2, Video } from 'lucide-react';
+import {
+  CalendarDays,
+  Edit,
+  Film,
+  Image as ImageIcon,
+  Link2,
+  Plus,
+  Trash2,
+  UploadCloud,
+  Video,
+  X,
+} from 'lucide-react';
 import { Modal } from '../../components/common/Modal';
-import { galleryApi } from '../../services/api';
+import { galleryApi, getAssetUrl } from '../../services/api';
 import type { GalleryEvent, GalleryMedia, GalleryYear } from '../../types';
 
 type ApiErrorBody = { error?: string };
@@ -14,6 +25,21 @@ const getApiErrorMessage = (err: unknown, fallback: string) => {
   }
 
   return fallback;
+};
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+type UploadFileItem = {
+  id: string;
+  file: File;
+  previewUrl: string;
+  isVideo: boolean;
+  name: string;
+  size: number;
 };
 
 const emptyYearForm = {
@@ -54,6 +80,11 @@ export function GalleryAdmin() {
   const [mediaForm, setMediaForm] = useState(emptyMediaForm);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // Drag & drop upload states
+  const [uploadFiles, setUploadFiles] = useState<UploadFileItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [mediaSourceTab, setMediaSourceTab] = useState<'upload' | 'url'>('upload');
 
   const loadGallery = async () => {
     setLoading(true);
@@ -117,6 +148,8 @@ export function GalleryAdmin() {
     setSelectedEvent(event);
     setSelectedMedia(null);
     setMediaForm({ ...emptyMediaForm, sortOrder: event.media.length + 1 });
+    setUploadFiles([]);
+    setMediaSourceTab('upload');
     setFormError('');
     setModalMode('media');
   };
@@ -131,15 +164,47 @@ export function GalleryAdmin() {
       thumbnailUrl: media.thumbnailUrl || '',
       sortOrder: media.sortOrder,
     });
+    setUploadFiles([]);
     setFormError('');
     setModalMode('media');
   };
 
+  const handleFileSelection = (fileList: FileList | File[]) => {
+    const incomingFiles = Array.from(fileList);
+    const newItems: UploadFileItem[] = incomingFiles.map((file) => {
+      const isVideo = file.type.startsWith('video/');
+      const previewUrl = URL.createObjectURL(file);
+      return {
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        file,
+        previewUrl,
+        isVideo,
+        name: file.name,
+        size: file.size,
+      };
+    });
+    setUploadFiles((prev) => [...prev, ...newItems]);
+    setFormError('');
+  };
+
+  const removeUploadFile = (id: string) => {
+    setUploadFiles((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((item) => item.id !== id);
+    });
+  };
+
   const closeModal = () => {
+    uploadFiles.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    setUploadFiles([]);
     setModalMode(null);
     setSelectedYear(null);
     setSelectedEvent(null);
     setSelectedMedia(null);
+    setMediaSourceTab('upload');
     setFormError('');
   };
 
@@ -194,12 +259,33 @@ export function GalleryAdmin() {
     try {
       if (selectedMedia) {
         await galleryApi.updateMedia(selectedMedia.id, mediaForm);
+        setNotice({ type: 'success', message: 'Media galeri berhasil disimpan.' });
       } else if (selectedEvent) {
-        await galleryApi.createMedia(selectedEvent.id, mediaForm);
+        if (mediaSourceTab === 'upload') {
+          if (uploadFiles.length === 0) {
+            setFormError('Silakan pilih atau tarik setidaknya 1 file foto/video terlebih dahulu.');
+            setFormLoading(false);
+            return;
+          }
+          await galleryApi.uploadMedia(
+            selectedEvent.id,
+            uploadFiles.map((f) => f.file),
+            mediaForm.caption,
+            mediaForm.sortOrder
+          );
+          setNotice({ type: 'success', message: `${uploadFiles.length} file media berhasil diunggah.` });
+        } else {
+          if (!mediaForm.url.trim()) {
+            setFormError('URL media tidak boleh kosong.');
+            setFormLoading(false);
+            return;
+          }
+          await galleryApi.createMedia(selectedEvent.id, mediaForm);
+          setNotice({ type: 'success', message: 'Media galeri berhasil disimpan.' });
+        }
       }
       closeModal();
       await loadGallery();
-      setNotice({ type: 'success', message: 'Media galeri berhasil disimpan.' });
     } catch (error) {
       setFormError(getApiErrorMessage(error, 'Gagal menyimpan media galeri.'));
     } finally {
@@ -318,7 +404,7 @@ export function GalleryAdmin() {
 
                     <div className="admin-gallery-media-bar">
                       <span>
-                        <Image size={15} />
+                        <ImageIcon size={15} />
                         {galleryEvent.media.filter((media) => media.mediaType === 'PHOTO').length} foto
                       </span>
                       <span>
@@ -335,10 +421,28 @@ export function GalleryAdmin() {
                       <div className="admin-gallery-media-list">
                         {galleryEvent.media.map((media) => (
                           <div className="admin-gallery-media-item" key={media.id}>
-                            <span className={media.mediaType === 'PHOTO' ? 'badge-male badge' : 'badge-female badge'}>{media.mediaType}</span>
-                            <div>
-                              <strong>{media.caption || media.url}</strong>
-                              <small>{media.url}</small>
+                            {media.mediaType === 'PHOTO' ? (
+                              <img
+                                src={getAssetUrl(media.url)}
+                                alt={media.caption || 'Foto'}
+                                className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+                                <Video size={18} />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className={media.mediaType === 'PHOTO' ? 'badge-male badge text-[10px] px-2 py-0.5' : 'badge-female badge text-[10px] px-2 py-0.5'}>
+                                  {media.mediaType}
+                                </span>
+                                <strong className="truncate text-sm text-slate-800">{media.caption || media.url}</strong>
+                              </div>
+                              <small className="text-xs text-slate-400 truncate block mt-0.5">{media.url}</small>
                             </div>
                             <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEditMedia(galleryEvent, media)}>
                               <Edit size={15} />
@@ -358,6 +462,7 @@ export function GalleryAdmin() {
         </div>
       )}
 
+      {/* MODAL TAHUN */}
       <Modal isOpen={modalMode === 'year'} onClose={closeModal} title={selectedYear ? 'Edit Tahun Galeri' : 'Tambah Tahun Galeri'}>
         <form onSubmit={submitYear}>
           {formError && <div className="p-3 bg-red-50 text-red-500 rounded-lg mb-4 text-sm">{formError}</div>}
@@ -400,6 +505,7 @@ export function GalleryAdmin() {
         </form>
       </Modal>
 
+      {/* MODAL ACARA */}
       <Modal isOpen={modalMode === 'event'} onClose={closeModal} title={selectedEvent ? 'Edit Acara' : 'Tambah Acara'}>
         <form onSubmit={submitEvent}>
           {formError && <div className="p-3 bg-red-50 text-red-500 rounded-lg mb-4 text-sm">{formError}</div>}
@@ -428,37 +534,295 @@ export function GalleryAdmin() {
         </form>
       </Modal>
 
-      <Modal isOpen={modalMode === 'media'} onClose={closeModal} title={selectedMedia ? 'Edit Media' : 'Tambah Media'}>
+      {/* MODAL MEDIA DENGAN GOOGLE FORM STYLE DRAG & DROP FILE UPLOAD */}
+      <Modal
+        isOpen={modalMode === 'media'}
+        onClose={closeModal}
+        title={selectedMedia ? 'Edit Media' : `Tambah Media — ${selectedEvent?.title || 'Acara'}`}
+      >
         <form onSubmit={submitMedia}>
           {formError && <div className="p-3 bg-red-50 text-red-500 rounded-lg mb-4 text-sm">{formError}</div>}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="form-group">
-              <label className="form-label">Tipe Media</label>
-              <select className="form-select" value={mediaForm.mediaType} onChange={(e) => setMediaForm({ ...mediaForm, mediaType: e.target.value as 'PHOTO' | 'VIDEO' })}>
-                <option value="PHOTO">Foto</option>
-                <option value="VIDEO">Video</option>
-              </select>
+
+          {!selectedMedia ? (
+            <>
+              {/* Tab Selector: Upload File vs URL Link */}
+              <div className="flex rounded-lg bg-slate-100 p-1 mb-4">
+                <button
+                  type="button"
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-md transition-all ${
+                    mediaSourceTab === 'upload' ? 'bg-white text-lime-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  onClick={() => setMediaSourceTab('upload')}
+                >
+                  <UploadCloud size={16} />
+                  Pilih / Drag & Drop File
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-md transition-all ${
+                    mediaSourceTab === 'url' ? 'bg-white text-lime-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  onClick={() => setMediaSourceTab('url')}
+                >
+                  <Link2 size={16} />
+                  Tautan URL / Link
+                </button>
+              </div>
+
+              {mediaSourceTab === 'upload' ? (
+                <div className="space-y-4">
+                  {/* Modern Google Form style Dropzone */}
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragging(false);
+                      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        handleFileSelection(e.dataTransfer.files);
+                      }
+                    }}
+                    onClick={() => document.getElementById('gallery-file-input')?.click()}
+                    className={`relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all ${
+                      isDragging
+                        ? 'border-lime-600 bg-lime-100/50 scale-[1.01]'
+                        : 'border-slate-300 hover:border-lime-600 hover:bg-lime-50/40 bg-slate-50/50'
+                    }`}
+                  >
+                    <input
+                      id="gallery-file-input"
+                      type="file"
+                      multiple
+                      accept="image/*,video/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          handleFileSelection(e.target.files);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-lime-100 text-lime-800 mb-3 shadow-inner">
+                      <UploadCloud size={28} />
+                    </div>
+                    <p className="font-bold text-slate-800 text-base">
+                      Tarik & lepas foto atau video ke sini
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      atau <span className="text-lime-700 font-bold underline">klik untuk pilih dari komputer / galeri HP</span>
+                    </p>
+                    <div className="mt-3 flex flex-wrap justify-center gap-2 text-[11px] text-slate-400">
+                      <span>Foto (JPG, PNG, WebP)</span>
+                      <span>•</span>
+                      <span>Video (MP4, WebM)</span>
+                      <span>•</span>
+                      <span>Bisa pilih banyak file sekaligus</span>
+                    </div>
+                  </div>
+
+                  {/* Selected Files Preview List */}
+                  {uploadFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-500 px-1">
+                        <span>{uploadFiles.length} file dipilih:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            uploadFiles.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+                            setUploadFiles([]);
+                          }}
+                          className="text-red-500 hover:underline"
+                        >
+                          Hapus Semua
+                        </button>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                        {uploadFiles.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm"
+                          >
+                            {item.isVideo ? (
+                              <div className="h-12 w-12 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                                <Film size={22} />
+                              </div>
+                            ) : (
+                              <img
+                                src={item.previewUrl}
+                                alt={item.name}
+                                className="h-12 w-12 rounded-md object-cover border border-slate-100 shrink-0"
+                              />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-xs font-bold text-slate-700">{item.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                  item.isVideo ? 'bg-blue-100 text-blue-700' : 'bg-lime-100 text-lime-800'
+                                }`}>
+                                  {item.isVideo ? 'Video' : 'Foto'}
+                                </span>
+                                <span className="text-[11px] text-slate-400">{formatFileSize(item.size)}</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeUploadFile(item.id);
+                              }}
+                              className="p-1 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors"
+                              title="Hapus file ini"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Keterangan / Caption <span className="text-slate-400 font-normal">(Opsional)</span>
+                    </label>
+                    <input
+                      className="form-input"
+                      value={mediaForm.caption}
+                      onChange={(e) => setMediaForm({ ...mediaForm, caption: e.target.value })}
+                      placeholder="Contoh: Foto bersama keluarga inti, Sesi ramah tamah"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="form-group">
+                      <label className="form-label">Tipe Media</label>
+                      <select
+                        className="form-select"
+                        value={mediaForm.mediaType}
+                        onChange={(e) => setMediaForm({ ...mediaForm, mediaType: e.target.value as 'PHOTO' | 'VIDEO' })}
+                      >
+                        <option value="PHOTO">Foto</option>
+                        <option value="VIDEO">Video</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Urutan</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={mediaForm.sortOrder}
+                        onChange={(e) => setMediaForm({ ...mediaForm, sortOrder: Number(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">URL Media</label>
+                    <input
+                      className="form-input"
+                      value={mediaForm.url}
+                      onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })}
+                      required={mediaSourceTab === 'url'}
+                      placeholder="https://... atau /uploads/..."
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Caption</label>
+                    <input
+                      className="form-input"
+                      value={mediaForm.caption}
+                      onChange={(e) => setMediaForm({ ...mediaForm, caption: e.target.value })}
+                      placeholder="Keterangan media"
+                    />
+                  </div>
+                  {mediaForm.mediaType === 'VIDEO' && (
+                    <div className="form-group">
+                      <label className="form-label">Thumbnail Video (Opsional)</label>
+                      <input
+                        className="form-input"
+                        value={mediaForm.thumbnailUrl}
+                        onChange={(e) => setMediaForm({ ...mediaForm, thumbnailUrl: e.target.value })}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            /* Edit existing media */
+            <div className="space-y-4">
+              {selectedMedia.mediaType === 'PHOTO' ? (
+                <div className="rounded-lg overflow-hidden border border-slate-200 max-h-48 flex items-center justify-center bg-slate-900/5">
+                  <img src={getAssetUrl(mediaForm.url)} alt={mediaForm.caption || ''} className="max-h-48 object-contain" />
+                </div>
+              ) : (
+                <div className="rounded-lg p-4 bg-blue-50 border border-blue-200 text-blue-800 flex items-center gap-3">
+                  <Video size={24} />
+                  <div className="text-xs truncate">
+                    <strong>URL Video:</strong> {mediaForm.url}
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="form-group">
+                  <label className="form-label">Tipe Media</label>
+                  <select
+                    className="form-select"
+                    value={mediaForm.mediaType}
+                    onChange={(e) => setMediaForm({ ...mediaForm, mediaType: e.target.value as 'PHOTO' | 'VIDEO' })}
+                  >
+                    <option value="PHOTO">Foto</option>
+                    <option value="VIDEO">Video</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Urutan</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={mediaForm.sortOrder}
+                    onChange={(e) => setMediaForm({ ...mediaForm, sortOrder: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">URL Media</label>
+                <input
+                  className="form-input"
+                  value={mediaForm.url}
+                  onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Caption</label>
+                <input
+                  className="form-input"
+                  value={mediaForm.caption}
+                  onChange={(e) => setMediaForm({ ...mediaForm, caption: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Urutan</label>
-              <input type="number" className="form-input" value={mediaForm.sortOrder} onChange={(e) => setMediaForm({ ...mediaForm, sortOrder: Number(e.target.value) })} />
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">URL Media</label>
-            <input className="form-input" value={mediaForm.url} onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })} required placeholder="https://... atau /uploads/..." />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Caption</label>
-            <input className="form-input" value={mediaForm.caption} onChange={(e) => setMediaForm({ ...mediaForm, caption: e.target.value })} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Thumbnail Video</label>
-            <input className="form-input" value={mediaForm.thumbnailUrl} onChange={(e) => setMediaForm({ ...mediaForm, thumbnailUrl: e.target.value })} placeholder="Opsional, untuk video" />
-          </div>
+          )}
+
           <div className="flex justify-end gap-2 mt-6">
-            <button type="button" className="btn btn-ghost" onClick={closeModal} disabled={formLoading}>Batal</button>
-            <button type="submit" className="btn btn-primary" disabled={formLoading}>{formLoading ? 'Menyimpan...' : 'Simpan'}</button>
+            <button type="button" className="btn btn-ghost" onClick={closeModal} disabled={formLoading}>
+              Batal
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={formLoading}>
+              {formLoading
+                ? 'Mengunggah...'
+                : selectedMedia
+                ? 'Simpan Perubahan'
+                : mediaSourceTab === 'upload' && uploadFiles.length > 1
+                ? `Unggah ${uploadFiles.length} File`
+                : 'Unggah & Simpan'}
+            </button>
           </div>
         </form>
       </Modal>

@@ -12,6 +12,7 @@ router.delete('/:id', auth_middleware_1.authenticate, auth_middleware_1.requireA
 router.post('/:yearId/events', auth_middleware_1.authenticate, auth_middleware_1.requireAdmin, gallery_controller_1.createGalleryEvent);
 router.put('/events/:eventId', auth_middleware_1.authenticate, auth_middleware_1.requireAdmin, gallery_controller_1.updateGalleryEvent);
 router.delete('/events/:eventId', auth_middleware_1.authenticate, auth_middleware_1.requireAdmin, gallery_controller_1.deleteGalleryEvent);
+router.post('/events/:eventId/upload', auth_middleware_1.authenticate, auth_middleware_1.requireAdmin, gallery_controller_1.galleryUpload.any(), gallery_controller_1.uploadGalleryMedia);
 router.post('/events/:eventId/media', auth_middleware_1.authenticate, auth_middleware_1.requireAdmin, gallery_controller_1.createGalleryMedia);
 router.put('/media/:mediaId', auth_middleware_1.authenticate, auth_middleware_1.requireAdmin, gallery_controller_1.updateGalleryMedia);
 router.delete('/media/:mediaId', auth_middleware_1.authenticate, auth_middleware_1.requireAdmin, gallery_controller_1.deleteGalleryMedia);
@@ -19,6 +20,7 @@ router.all('/', http_1.methodNotAllowed);
 router.all('/:id', http_1.methodNotAllowed);
 router.all('/:yearId/events', http_1.methodNotAllowed);
 router.all('/events/:eventId', http_1.methodNotAllowed);
+router.all('/events/:eventId/upload', http_1.methodNotAllowed);
 router.all('/events/:eventId/media', http_1.methodNotAllowed);
 router.all('/media/:mediaId', http_1.methodNotAllowed);
 exports.default = router;

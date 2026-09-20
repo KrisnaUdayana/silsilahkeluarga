@@ -1,6 +1,54 @@
 import { Request, Response } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
 import prisma from '../utils/prisma';
 import { conflictError, validationError } from '../utils/http';
+
+const safeUnlink = (filePath: string) => {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (error) {
+    console.error('Failed to delete file:', error);
+  }
+};
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = process.env.UPLOAD_DIR || './uploads';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const filename = `${crypto.randomUUID()}${ext}`;
+    cb(null, filename);
+  }
+});
+
+const galleryFileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+  const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska', 'video/ogg', 'video/3gpp'];
+  
+  if (allowedImageTypes.includes(file.mimetype) || allowedVideoTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Tipe file tidak diizinkan. Gunakan format gambar (JPG, PNG, WebP, GIF) atau video (MP4, WebM, MOV).'));
+  }
+};
+
+export const galleryUpload = multer({
+  storage,
+  fileFilter: galleryFileFilter,
+  limits: {
+    fileSize: parseInt(process.env.MAX_GALLERY_FILE_SIZE || '52428800') // 50MB default
+  }
+});
 
 const galleryInclude = {
   events: {
@@ -274,12 +322,76 @@ export const updateGalleryMedia = async (req: Request, res: Response) => {
   }
 };
 
+export const uploadGalleryMedia = async (req: Request, res: Response) => {
+  try {
+    const galleryEventId = String(req.params.eventId);
+    const { caption, sortOrder } = req.body;
+
+    const event = await prisma.galleryEvent.findUnique({
+      where: { id: galleryEventId },
+      include: { media: true }
+    });
+    if (!event) {
+      if (req.files && Array.isArray(req.files)) {
+        req.files.forEach((f: Express.Multer.File) => safeUnlink(f.path));
+      } else if (req.file) {
+        safeUnlink(req.file.path);
+      }
+      return res.status(404).json({ error: 'Acara galeri tidak ditemukan.' });
+    }
+
+    const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
+    if (!files || files.length === 0) {
+      return validationError(res, 'File foto atau video tidak ditemukan.');
+    }
+
+    const initialSortOrder = parseSortOrder(sortOrder, event.media.length + 1) || 1;
+    const createdMediaList = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const isVideo = file.mimetype.startsWith('video/');
+      const mediaType = isVideo ? 'VIDEO' : 'PHOTO';
+      const fileUrl = `/uploads/${file.filename}`;
+      const itemCaption = caption || (files.length === 1 ? '' : path.parse(file.originalname).name);
+
+      const media = await prisma.galleryMedia.create({
+        data: {
+          galleryEventId,
+          mediaType,
+          url: fileUrl,
+          caption: itemCaption,
+          thumbnailUrl: '',
+          sortOrder: initialSortOrder + i
+        }
+      });
+      createdMediaList.push(media);
+    }
+
+    res.status(201).json(createdMediaList.length === 1 ? createdMediaList[0] : createdMediaList);
+  } catch (error) {
+    console.error('Upload gallery media error:', error);
+    if (req.files && Array.isArray(req.files)) {
+      req.files.forEach((f: Express.Multer.File) => safeUnlink(f.path));
+    } else if (req.file) {
+      safeUnlink(req.file.path);
+    }
+    res.status(500).json({ error: 'Terjadi kesalahan saat mengunggah media galeri.' });
+  }
+};
+
 export const deleteGalleryMedia = async (req: Request, res: Response) => {
   try {
     const id = String(req.params.mediaId);
     const existing = await prisma.galleryMedia.findUnique({ where: { id } });
     if (!existing) {
       return res.status(404).json({ error: 'Media galeri tidak ditemukan.' });
+    }
+
+    // Unlink local file if stored in /uploads
+    if (existing.url && existing.url.startsWith('/uploads/')) {
+      const filePath = path.join(process.env.UPLOAD_DIR || './uploads', path.basename(existing.url));
+      safeUnlink(filePath);
     }
 
     await prisma.galleryMedia.delete({ where: { id } });
