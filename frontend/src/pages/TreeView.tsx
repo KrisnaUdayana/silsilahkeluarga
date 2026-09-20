@@ -417,24 +417,50 @@ function FamilyNode({ node, allNodes, level, onSelect }: FamilyNodeProps) {
         <ChildrenBranch children={children} allNodes={allNodes} level={level} onSelect={onSelect} />
       )}
 
-      {expanded && totalChildren > 0 && spouses.length > 1 && (
-        <div className="tree-multi-spouse-branches">
-          {spouseFamilies
+      {expanded && totalChildren > 0 && spouses.length > 1 && (() => {
+        const validSpouseGroups = [
+          ...spouseFamilies
             .filter((family) => family.children.length > 0)
-            .map((family) => (
-              <div className="tree-spouse-family" key={family.spouse.id}>
-                <div className="tree-spouse-family-label">dengan {shortName(family.spouse)}</div>
-                <ChildrenBranch children={family.children} allNodes={allNodes} level={level} onSelect={onSelect} />
-              </div>
-            ))}
-          {singleParentChildren.length > 0 && (
-            <div className="tree-spouse-family">
-              <div className="tree-spouse-family-label">tanpa pasangan tercatat</div>
-              <ChildrenBranch children={singleParentChildren} allNodes={allNodes} level={level} onSelect={onSelect} />
+            .map((family) => ({
+              id: family.spouse.id,
+              label: `dengan ${shortName(family.spouse)}`,
+              children: family.children,
+            })),
+          ...(singleParentChildren.length > 0
+            ? [
+                {
+                  id: 'single-parent',
+                  label: 'tanpa pasangan tercatat',
+                  children: singleParentChildren,
+                },
+              ]
+            : []),
+        ];
+
+        return (
+          <div className="tree-branch">
+            <div className="tree-line-vertical" />
+            <div className="tree-children-row tree-multi-spouse-row">
+              {validSpouseGroups.map((group, index) => (
+                <div className="tree-child-branch tree-spouse-family" key={group.id}>
+                  {validSpouseGroups.length > 1 && (
+                    <div
+                      className="tree-line-horizontal"
+                      style={{
+                        left: index === 0 ? '50%' : 'calc(var(--tree-column-gap) / -2)',
+                        right: index === validSpouseGroups.length - 1 ? '50%' : 'calc(var(--tree-column-gap) / -2)',
+                      }}
+                    />
+                  )}
+                  <div className="tree-line-vertical tree-line-to-child" />
+                  <div className="tree-spouse-family-label">{group.label}</div>
+                  <ChildrenBranch children={group.children} allNodes={allNodes} level={level} onSelect={onSelect} />
+                </div>
+              ))}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -350,24 +350,23 @@ body {
   @apply flex items-center gap-3;
 }
 
-.tree-multi-spouse-branches {
-  @apply relative mt-3 flex items-start justify-center gap-8;
-  z-index: 2;
+.tree-multi-spouse-row {
+  @apply relative flex px-5;
+  gap: calc(var(--tree-column-gap) * 1.5);
 }
 
 .tree-spouse-family {
   @apply relative flex flex-col items-center;
-  z-index: 3;
+  z-index: 2;
 }
 
 .tree-spouse-family-label {
-  @apply relative z-[5] mb-1 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-600 shadow-sm;
-  border: 1px solid rgba(214, 162, 30, 0.35);
+  @apply relative z-[5] mb-1 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 shadow-sm border border-amber-400/40;
   border-radius: 999px;
 }
 
 .tree-children-toggle {
-  @apply relative mt-2 inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-bold text-white bg-lime-700 hover:bg-lime-800 rounded-full shadow-md shadow-lime-950/20 border-2 border-lime-700 transition-all transform hover:scale-105 active:scale-95 cursor-pointer z-20;
+  @apply relative mt-2 inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-bold text-white bg-lime-700 hover:bg-lime-800 rounded-full shadow-md shadow-lime-950/20 border-2 border-white transition-all transform hover:scale-105 active:scale-95 cursor-pointer z-20;
 }
 
 .tree-children-toggle svg {
