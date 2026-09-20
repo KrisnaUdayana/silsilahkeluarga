@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Person {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  fullName     String    @db.VarChar(255)
+  nickname     String?   @db.VarChar(100)
+  gender       String    @db.VarChar(10)  // MALE or FEMALE
+  birthDate    DateTime? @db.Date
+  deathDate    DateTime? @db.Date
+  birthPlace   String?   @db.VarChar(255)
+  occupation   String?   @db.VarChar(255)
+  biography    String?   @db.Text
+  profilePhoto String?   @db.VarChar(500)
+  
+  fatherId     String?   @db.VarChar(36)
+  motherId     String?   @db.VarChar(36)
+  father       Person?   @relation("FatherChildren", fields: [fatherId], references: [id])
+  mother       Person?   @relation("MotherChildren", fields: [motherId], references: [id])
+  
+  childrenAsFather Person[] @relation("FatherChildren")
+  childrenAsMother Person[] @relation("MotherChildren")
+  
+  marriagesAsHusband Marriage[] @relation("Husband")
+  marriagesAsWife    Marriage[] @relation("Wife")
+  
+  media        Media[]
+  user         User?
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  @@index([fatherId])
+  @@index([motherId])
+  @@index([fullName])
+}
+
+model Marriage {
+  id            String    @id @default(uuid()) @db.VarChar(36)
+  
+  husbandId     String    @db.VarChar(36)
+  wifeId        String    @db.VarChar(36)
+  husband       Person    @relation("Husband", fields: [husbandId], references: [id])
+  wife          Person    @relation("Wife", fields: [wifeId], references: [id])
+  
+  marriageDate  DateTime? @db.Date
+  marriagePlace String?   @db.VarChar(255)
+  divorceDate   DateTime? @db.Date
+  orderNumber   Int       @default(1)
+  
+  createdAt     DateTime  @default(now())
+  
+  @@unique([husbandId, wifeId, orderNumber])
+  @@index([husbandId])
+  @@index([wifeId])
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @db.VarChar(255)
+  role         String    @default("VIEWER") @db.VarChar(20)  // ADMIN or VIEWER
+  
+  personId     String?   @unique @db.VarChar(36)
+  person       Person?   @relation(fields: [personId], references: [id])
+  
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  
+  @@index([email])
+}
+
+model Media {
+  id         String    @id @default(uuid()) @db.VarChar(36)
+  
+  personId   String    @db.VarChar(36)
+  person     Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  fileUrl    String    @db.VarChar(500)
+  caption    String?   @db.VarChar(255)
+  mediaType  String    @default("PHOTO") @db.VarChar(20)  // PHOTO or DOCUMENT
+  
+  uploadedAt DateTime  @default(now())
+  
+  @@index([personId])
+}

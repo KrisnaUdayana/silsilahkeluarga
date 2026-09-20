@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+/* ===== CUSTOM CSS VARIABLES (untuk TreeView) ===== */
+:root {
+  --color-primary: #6366f1;
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #4f46e5;
+  --color-primary-50: #eef2ff;
+
+  --color-male: #3b82f6;
+  --color-male-light: #dbeafe;
+  --color-female: #ec4899;
+  --color-female-light: #fce7f3;
+
+  --color-bg: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-text: #1e293b;
+  --color-text-light: #475569;
+  --color-text-muted: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  --transition-fast: 150ms ease;
+}
+
+/* ===== BASE STYLES ===== */
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+  font-family: var(--font-sans);
+}
+
+/* ===== COMPONENTS ===== */
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-lime-700 to-lime-800 text-white shadow-lg shadow-lime-700/30 hover:shadow-xl hover:shadow-lime-700/40 hover:-translate-y-0.5;
+}
+
+.btn-secondary {
+  @apply bg-white text-slate-700 border border-slate-200 hover:border-lime-700 hover:bg-slate-50;
+}
+
+.btn-ghost {
+  @apply bg-transparent text-slate-600 hover:bg-slate-100 hover:text-lime-800;
+}
+
+.btn-lg {
+  @apply px-8 py-3.5 text-base;
+}
+
+.btn-sm {
+  @apply px-4 py-2 text-sm;
+}
+
+/* Cards */
+.card {
+  @apply bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+}
+
+.card-header {
+  @apply p-5 border-b border-slate-100;
+}
+
+.card-body {
+  @apply p-5;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full uppercase tracking-wide;
+}
+
+.badge-male {
+  @apply bg-blue-100 text-blue-600;
+}
+
+.badge-female {
+  @apply bg-pink-100 text-pink-600;
+}
+
+/* Forms */
+.form-group {
+  @apply mb-5;
+}
+
+.form-label {
+  @apply block mb-1.5 text-sm font-medium text-slate-700;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  @apply w-full px-4 py-2.5 text-base border-2 border-slate-200 rounded-lg bg-white transition-all duration-200 focus:outline-none focus:border-lime-700 focus:ring-4 focus:ring-lime-50;
+}
+
+.input-with-icon {
+  @apply pl-12;
+}
+
+/* Navbar */
+.navbar {
+  @apply bg-white border-b border-slate-100 py-3 sticky top-0 z-50;
+}
+
+.navbar-inner {
+  @apply flex items-center justify-between gap-4 flex-wrap;
+}
+
+.navbar-brand {
+  @apply flex items-center gap-2 text-xl font-bold text-lime-900 min-w-0;
+}
+
+.navbar-nav {
+  @apply flex items-center gap-1 list-none m-0 p-0 flex-wrap;
+}
+
+.navbar-link {
+  @apply flex items-center gap-1.5 px-4 py-2 text-slate-600 font-medium rounded-lg transition-all duration-200 hover:text-lime-800 hover:bg-lime-50;
+}
+
+.navbar-link.active {
+  @apply text-lime-800 bg-lime-50;
+}
+
+/* Container */
+.container {
+  @apply max-w-7xl mx-auto px-6;
+}
+
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+
+  .navbar {
+    @apply py-2;
+  }
+
+  .navbar-inner {
+    @apply gap-3;
+  }
+
+  .navbar-brand {
+    @apply text-base;
+  }
+
+  .navbar-nav {
+    @apply order-3 w-full justify-between gap-1;
+  }
+
+  .navbar-link {
+    @apply px-2 py-2 text-xs;
+  }
+
+  .btn {
+    @apply px-4;
+  }
+}
+
+/* Spinner */
+.spinner {
+  @apply w-10 h-10 border-4 border-slate-200 border-t-lime-700 rounded-full animate-spin;
+}
+
+/* Footer */
+.footer {
+  @apply bg-white border-t border-slate-100 py-5 mt-auto text-center text-slate-500 text-sm;
+}
+
+/* Modal */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-6;
+}
+
+.modal {
+  @apply bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
+}
+
+.modal-header {
+  @apply flex items-center justify-between p-5 border-b border-slate-100;
+}
+
+.modal-body {
+  @apply p-5;
+}
+
+.modal-footer {
+  @apply flex justify-end gap-2 p-5 border-t border-slate-100;
+}
