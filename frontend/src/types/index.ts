@@ -77,6 +77,69 @@ export interface Media {
   uploadedAt: string;
 }
 
+export interface GalleryMedia {
+  id: string;
+  galleryEventId: string;
+  mediaType: 'PHOTO' | 'VIDEO';
+  url: string;
+  caption?: string | null;
+  thumbnailUrl?: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GalleryEvent {
+  id: string;
+  galleryYearId: string;
+  title: string;
+  eventDate?: string | null;
+  summary?: string | null;
+  sortOrder: number;
+  media: GalleryMedia[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GalleryYear {
+  id: string;
+  yearLabel: string;
+  title: string;
+  location?: string | null;
+  status?: string | null;
+  description?: string | null;
+  featured: boolean;
+  sortOrder: number;
+  events: GalleryEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GalleryYearFormData {
+  yearLabel: string;
+  title: string;
+  location?: string;
+  status?: string;
+  description?: string;
+  featured?: boolean;
+  sortOrder?: number;
+}
+
+export interface GalleryEventFormData {
+  title: string;
+  eventDate?: string;
+  summary?: string;
+  sortOrder?: number;
+}
+
+export interface GalleryMediaFormData {
+  mediaType: 'PHOTO' | 'VIDEO';
+  url: string;
+  caption?: string;
+  thumbnailUrl?: string;
+  sortOrder?: number;
+}
+
 // Tree node for visualization
 export interface TreeNode {
   id: string;

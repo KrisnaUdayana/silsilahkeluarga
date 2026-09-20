@@ -10,7 +10,13 @@ import type {
   LoginResponse,
   PersonFormData,
   MarriageFormData,
-  UserFormData
+  UserFormData,
+  GalleryYear,
+  GalleryYearFormData,
+  GalleryEvent,
+  GalleryEventFormData,
+  GalleryMedia,
+  GalleryMediaFormData
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -175,6 +181,55 @@ export const mediaApi = {
   
   delete: async (id: string): Promise<void> => {
     await api.delete(`/media/${id}`);
+  },
+};
+
+export const galleryApi = {
+  getAll: async (): Promise<GalleryYear[]> => {
+    const { data } = await api.get<GalleryYear[]>('/gallery');
+    return data;
+  },
+
+  createYear: async (formData: GalleryYearFormData): Promise<GalleryYear> => {
+    const { data } = await api.post<GalleryYear>('/gallery', formData);
+    return data;
+  },
+
+  updateYear: async (id: string, formData: Partial<GalleryYearFormData>): Promise<GalleryYear> => {
+    const { data } = await api.put<GalleryYear>(`/gallery/${id}`, formData);
+    return data;
+  },
+
+  deleteYear: async (id: string): Promise<void> => {
+    await api.delete(`/gallery/${id}`);
+  },
+
+  createEvent: async (yearId: string, formData: GalleryEventFormData): Promise<GalleryEvent> => {
+    const { data } = await api.post<GalleryEvent>(`/gallery/${yearId}/events`, formData);
+    return data;
+  },
+
+  updateEvent: async (eventId: string, formData: Partial<GalleryEventFormData>): Promise<GalleryEvent> => {
+    const { data } = await api.put<GalleryEvent>(`/gallery/events/${eventId}`, formData);
+    return data;
+  },
+
+  deleteEvent: async (eventId: string): Promise<void> => {
+    await api.delete(`/gallery/events/${eventId}`);
+  },
+
+  createMedia: async (eventId: string, formData: GalleryMediaFormData): Promise<GalleryMedia> => {
+    const { data } = await api.post<GalleryMedia>(`/gallery/events/${eventId}/media`, formData);
+    return data;
+  },
+
+  updateMedia: async (mediaId: string, formData: Partial<GalleryMediaFormData>): Promise<GalleryMedia> => {
+    const { data } = await api.put<GalleryMedia>(`/gallery/media/${mediaId}`, formData);
+    return data;
+  },
+
+  deleteMedia: async (mediaId: string): Promise<void> => {
+    await api.delete(`/gallery/media/${mediaId}`);
   },
 };
 

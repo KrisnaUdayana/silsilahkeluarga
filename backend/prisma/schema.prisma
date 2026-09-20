@@ -93,3 +93,51 @@ model Media {
   
   @@index([personId])
 }
+
+model GalleryYear {
+  id          String         @id @default(uuid()) @db.VarChar(36)
+  yearLabel   String         @unique @db.VarChar(50)
+  title       String         @db.VarChar(255)
+  location    String?        @db.VarChar(255)
+  status      String?        @db.VarChar(100)
+  description String?        @db.Text
+  featured    Boolean        @default(false)
+  sortOrder   Int            @default(0)
+  events      GalleryEvent[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([sortOrder])
+}
+
+model GalleryEvent {
+  id            String         @id @default(uuid()) @db.VarChar(36)
+  galleryYearId String         @db.VarChar(36)
+  galleryYear   GalleryYear    @relation(fields: [galleryYearId], references: [id], onDelete: Cascade)
+  title         String         @db.VarChar(255)
+  eventDate     String?        @db.VarChar(100)
+  summary       String?        @db.Text
+  sortOrder     Int            @default(0)
+  media         GalleryMedia[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([galleryYearId])
+  @@index([sortOrder])
+}
+
+model GalleryMedia {
+  id             String       @id @default(uuid()) @db.VarChar(36)
+  galleryEventId String       @db.VarChar(36)
+  galleryEvent   GalleryEvent @relation(fields: [galleryEventId], references: [id], onDelete: Cascade)
+  mediaType      String       @db.VarChar(20)
+  url            String       @db.VarChar(500)
+  caption        String?      @db.VarChar(255)
+  thumbnailUrl   String?      @db.VarChar(500)
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([galleryEventId])
+  @@index([sortOrder])
+}

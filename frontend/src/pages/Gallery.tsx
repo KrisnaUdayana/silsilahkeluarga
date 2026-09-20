@@ -1,102 +1,175 @@
+import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Camera, Clock, Image, MapPin, Play, Sparkles, Video } from 'lucide-react';
+import { galleryApi, getAssetUrl } from '../services/api';
+import type { GalleryYear } from '../types';
 
-const galleryYears = [
+const demoGalleryYears: GalleryYear[] = [
   {
-    year: '2022',
+    id: 'demo-2022',
+    yearLabel: '2022',
     title: 'Awal Dokumentasi',
     location: 'Semarapura Kangin',
     status: 'Siap diisi',
     featured: true,
+    sortOrder: 1,
+    createdAt: '',
+    updatedAt: '',
     events: [
       {
+        id: 'demo-2022-1',
+        galleryYearId: 'demo-2022',
         title: 'Pertemuan Keluarga',
-        date: 'Januari 2022',
+        eventDate: 'Januari 2022',
         summary: 'Dokumentasi suasana berkumpul, potret keluarga, dan catatan awal arsip visual.',
-        photos: 18,
-        videos: 2,
+        sortOrder: 1,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
       {
+        id: 'demo-2022-2',
+        galleryYearId: 'demo-2022',
         title: 'Dokumentasi Pura',
-        date: 'Agustus 2022',
+        eventDate: 'Agustus 2022',
         summary: 'Foto lingkungan pura, kegiatan bersama, serta rekaman singkat suasana acara.',
-        photos: 24,
-        videos: 3,
+        sortOrder: 2,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
     ],
   },
   {
-    year: '2023',
+    id: 'demo-2023',
+    yearLabel: '2023',
     title: 'Cerita yang Berlanjut',
     location: 'Klungkung',
     status: 'Siap diisi',
     featured: false,
+    sortOrder: 2,
+    createdAt: '',
+    updatedAt: '',
     events: [
       {
+        id: 'demo-2023-1',
+        galleryYearId: 'demo-2023',
         title: 'Kegiatan Keluarga',
-        date: 'Maret 2023',
+        eventDate: 'Maret 2023',
         summary: 'Album untuk kegiatan keluarga dan momen kebersamaan yang terjadi sepanjang tahun.',
-        photos: 32,
-        videos: 4,
+        sortOrder: 1,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
       {
+        id: 'demo-2023-2',
+        galleryYearId: 'demo-2023',
         title: 'Upacara dan Potret Anggota',
-        date: 'November 2023',
+        eventDate: 'November 2023',
         summary: 'Ruang untuk foto acara adat, dokumentasi generasi, dan video kenangan keluarga.',
-        photos: 27,
-        videos: 2,
+        sortOrder: 2,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
     ],
   },
   {
-    year: '2026',
+    id: 'demo-2026',
+    yearLabel: '2026',
     title: 'Arsip Terkini',
     location: 'Pura Dalem Majapahit',
     status: 'Tahun aktif',
     featured: true,
+    sortOrder: 3,
+    createdAt: '',
+    updatedAt: '',
     events: [
       {
+        id: 'demo-2026-1',
+        galleryYearId: 'demo-2026',
         title: 'Foto Keluarga Terbaru',
-        date: 'Februari 2026',
+        eventDate: 'Februari 2026',
         summary: 'Album terbaru untuk memperbarui potret anggota dan dokumentasi keluarga besar.',
-        photos: 20,
-        videos: 2,
+        sortOrder: 1,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
       {
+        id: 'demo-2026-2',
+        galleryYearId: 'demo-2026',
         title: 'Kumpulan Acara Tahun Ini',
-        date: 'September 2026',
+        eventDate: 'September 2026',
         summary: 'Dokumentasi kegiatan tahun berjalan yang bisa terus ditambah oleh admin.',
-        photos: 36,
-        videos: 5,
+        sortOrder: 2,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
     ],
   },
   {
-    year: 'Masa Mendatang',
+    id: 'demo-future',
+    yearLabel: 'Masa Mendatang',
     title: 'Ruang Generasi Berikutnya',
     location: 'Akan diperbarui',
     status: 'Direncanakan',
     featured: false,
+    sortOrder: 4,
+    createdAt: '',
+    updatedAt: '',
     events: [
       {
+        id: 'demo-future-1',
+        galleryYearId: 'demo-future',
         title: 'Album Tahun Berikutnya',
-        date: 'Akan datang',
+        eventDate: 'Akan datang',
         summary: 'Slot acara pertama untuk dokumentasi keluarga di tahun-tahun berikutnya.',
-        photos: 0,
-        videos: 0,
+        sortOrder: 1,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
       {
+        id: 'demo-future-2',
+        galleryYearId: 'demo-future',
         title: 'Warisan Visual Baru',
-        date: 'Akan datang',
+        eventDate: 'Akan datang',
         summary: 'Slot acara kedua untuk menambah foto, video, dan catatan visual generasi baru.',
-        photos: 0,
-        videos: 0,
+        sortOrder: 2,
+        createdAt: '',
+        updatedAt: '',
+        media: [],
       },
     ],
   },
 ];
 
+const mediaBackground = (url?: string | null) => (url ? { backgroundImage: `linear-gradient(135deg, rgba(15, 23, 42, 0.1), rgba(15, 23, 42, 0.58)), url(${getAssetUrl(url)})` } : undefined);
+
 export function GalleryPage() {
-  const totalEvents = galleryYears.reduce((total, item) => total + item.events.length, 0);
+  const [galleryYears, setGalleryYears] = useState<GalleryYear[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    galleryApi
+      .getAll()
+      .then(setGalleryYears)
+      .catch((error) => {
+        console.error('Failed to load gallery:', error);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const displayYears = galleryYears.length > 0 ? galleryYears : demoGalleryYears;
+  const totalEvents = displayYears.reduce((total, item) => total + item.events.length, 0);
+  const isDemo = !loading && galleryYears.length === 0;
+
+  const totalMedia = useMemo(
+    () => displayYears.reduce((total, year) => total + year.events.reduce((eventTotal, event) => eventTotal + event.media.length, 0), 0),
+    [displayYears],
+  );
 
   return (
     <div className="gallery-page">
@@ -116,7 +189,7 @@ export function GalleryPage() {
 
           <div className="gallery-hero-panel" aria-label="Ringkasan galeri">
             <div>
-              <strong>{galleryYears.length}</strong>
+              <strong>{displayYears.length}</strong>
               <span>Periode</span>
             </div>
             <div>
@@ -124,7 +197,7 @@ export function GalleryPage() {
               <span>Acara</span>
             </div>
             <div>
-              <strong>Foto/Video</strong>
+              <strong>{totalMedia || 'Foto/Video'}</strong>
               <span>Media</span>
             </div>
           </div>
@@ -135,75 +208,89 @@ export function GalleryPage() {
         <div className="container">
           <div className="gallery-section-heading">
             <div className="gallery-section-label">Album Tahunan</div>
-            <h2>Setiap tahun disusun menjadi dua acara utama.</h2>
+            <h2>{isDemo ? 'Contoh susunan dua acara per tahun.' : 'Galeri yang dikelola admin.'}</h2>
           </div>
 
           <div className="gallery-year-list">
-            {galleryYears.map((item) => (
-              <section className={`gallery-year-block ${item.featured ? 'gallery-year-block-featured' : ''}`} key={item.year}>
+            {displayYears.map((item) => (
+              <section className={`gallery-year-block ${item.featured ? 'gallery-year-block-featured' : ''}`} key={item.id}>
                 <div className="gallery-year-header">
                   <div>
                     <div className="gallery-year-label">Tahun</div>
-                    <h3>{item.year}</h3>
+                    <h3>{item.yearLabel}</h3>
                     <p>{item.title}</p>
                   </div>
                   <div className="gallery-card-meta">
                     <span>
                       <CalendarDays size={15} />
-                      {item.status}
+                      {item.status || 'Arsip'}
                     </span>
                     <span>
                       <MapPin size={15} />
-                      {item.location}
+                      {item.location || '-'}
                     </span>
                   </div>
                 </div>
 
                 <div className="gallery-event-grid">
-                  {item.events.map((event, eventIndex) => (
-                    <article className="gallery-event-card" key={event.title}>
-                      <div className="gallery-event-media">
-                        <div className="gallery-photo-stack" aria-label={`Pratinjau foto ${event.title}`}>
-                          <span className="gallery-photo-tile gallery-photo-tile-large">
-                            <Image size={24} />
-                          </span>
-                          <span className="gallery-photo-tile">
-                            <Camera size={18} />
-                          </span>
-                          <span className="gallery-photo-tile">
-                            <Image size={18} />
-                          </span>
-                        </div>
+                  {item.events.map((event, eventIndex) => {
+                    const photos = event.media.filter((media) => media.mediaType === 'PHOTO');
+                    const videos = event.media.filter((media) => media.mediaType === 'VIDEO');
+                    const previewPhotos = photos.slice(0, 3);
+                    const previewVideo = videos[0];
 
-                        <div className="gallery-video-preview" aria-label={`Pratinjau video ${event.title}`}>
-                          <div className="gallery-play-button">
-                            <Play size={20} fill="currentColor" />
+                    return (
+                      <article className="gallery-event-card" key={event.id}>
+                        <div className="gallery-event-media">
+                          <div className="gallery-photo-stack" aria-label={`Pratinjau foto ${event.title}`}>
+                            {[0, 1, 2].map((index) => (
+                              <span
+                                className={`gallery-photo-tile ${index === 0 ? 'gallery-photo-tile-large' : ''}`}
+                                key={index}
+                                style={mediaBackground(previewPhotos[index]?.url)}
+                              >
+                                {previewPhotos[index] ? null : index === 1 ? <Camera size={18} /> : <Image size={index === 0 ? 24 : 18} />}
+                              </span>
+                            ))}
                           </div>
-                          <span>Video acara {eventIndex + 1}</span>
-                        </div>
-                      </div>
 
-                      <div className="gallery-event-body">
-                        <div className="gallery-event-date">
-                          <Clock size={15} />
-                          {event.date}
+                          <a
+                            className="gallery-video-preview"
+                            aria-label={`Pratinjau video ${event.title}`}
+                            href={previewVideo?.url || undefined}
+                            target={previewVideo?.url ? '_blank' : undefined}
+                            rel="noreferrer"
+                            style={mediaBackground(previewVideo?.thumbnailUrl)}
+                          >
+                            <div className="gallery-play-button">
+                              <Play size={20} fill="currentColor" />
+                            </div>
+                            <span>{previewVideo ? previewVideo.caption || 'Putar video' : `Video acara ${eventIndex + 1}`}</span>
+                          </a>
                         </div>
-                        <h4>{event.title}</h4>
-                        <p>{event.summary}</p>
 
-                        <div className="gallery-media-counts">
-                          <span>
-                            <Image size={16} />
-                            {event.photos} foto
-                          </span>
-                          <span>
-                            <Video size={16} />
-                            {event.videos} video
-                          </span>
+                        <div className="gallery-event-body">
+                          <div className="gallery-event-date">
+                            <Clock size={15} />
+                            {event.eventDate || 'Tanggal belum diisi'}
+                          </div>
+                          <h4>{event.title}</h4>
+                          <p>{event.summary || 'Ringkasan acara belum diisi.'}</p>
+
+                          <div className="gallery-media-counts">
+                            <span>
+                              <Image size={16} />
+                              {photos.length} foto
+                            </span>
+                            <span>
+                              <Video size={16} />
+                              {videos.length} video
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </article>
-                  ))}
+                      </article>
+                    );
+                  })}
                 </div>
               </section>
             ))}
@@ -217,19 +304,19 @@ export function GalleryPage() {
             <div className="gallery-section-label">Alur Galeri</div>
             <h2>Foto dan video tetap dikelompokkan berdasarkan tahun dan acara.</h2>
             <p>
-              Saat fitur upload sudah disambungkan, admin bisa mengisi setiap acara dengan beberapa foto, video, caption,
-              dan keterangan lokasi.
+              Admin bisa mengisi setiap acara dengan beberapa foto, video, caption, thumbnail video, dan keterangan
+              lokasi.
             </p>
           </div>
 
           <div className="gallery-timeline">
-            {galleryYears.map((item) => (
-              <div className="gallery-timeline-item" key={item.year}>
+            {displayYears.map((item) => (
+              <div className="gallery-timeline-item" key={item.id}>
                 <div className="gallery-timeline-dot">
-                  {item.year === 'Masa Mendatang' ? <Clock size={18} /> : <Image size={18} />}
+                  {item.yearLabel === 'Masa Mendatang' ? <Clock size={18} /> : <Image size={18} />}
                 </div>
                 <div>
-                  <strong>{item.year}</strong>
+                  <strong>{item.yearLabel}</strong>
                   <span>{item.events.length} acara, foto, dan video</span>
                 </div>
               </div>
@@ -243,8 +330,8 @@ export function GalleryPage() {
           <div className="gallery-empty-panel">
             <Sparkles size={24} />
             <div>
-              <h2>Struktur media sudah siap.</h2>
-              <p>Berikutnya halaman ini bisa dibuat dinamis: tambah acara, upload foto, upload video, dan filter tahun.</p>
+              <h2>{isDemo ? 'Belum ada data galeri dari admin.' : 'Struktur media sudah aktif.'}</h2>
+              <p>{isDemo ? 'Masuk sebagai admin untuk membuat tahun, acara, foto, dan video.' : 'Data di halaman ini berasal dari panel admin galeri.'}</p>
             </div>
           </div>
         </div>
