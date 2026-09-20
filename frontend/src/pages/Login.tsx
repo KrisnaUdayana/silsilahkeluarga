@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
-import { TreePine, Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 
 type LoginLocationState = {
   from?: {
@@ -45,8 +45,8 @@ export function LoginPage() {
       <div className="card w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-br from-lime-700 to-lime-900 p-8 text-center text-white">
-          <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-4">
-            <TreePine size={32} />
+          <div className="w-20 h-20 rounded-2xl bg-white/95 p-2 flex items-center justify-center mx-auto mb-4 shadow-xl border border-white/30">
+            <img src="/logomajapahit.png" alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
           </div>
           <h1 className="text-2xl font-bold mb-1">
             Login Admin
