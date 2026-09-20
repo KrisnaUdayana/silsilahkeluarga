@@ -547,12 +547,6 @@ export function TreePage() {
         </div>
 
         <div className="tree-toolbar-actions">
-          {nodes.length > 0 && (
-            <button type="button" className="tree-demo-switch" onClick={() => setShowDemoTree((value) => !value)}>
-              {isDemoView ? 'Data asli' : 'Contoh 10 KK'}
-            </button>
-          )}
-
           <div className="tree-stats" aria-label="Ringkasan pohon">
             <div>
               <strong>{familyHeadCount}</strong>

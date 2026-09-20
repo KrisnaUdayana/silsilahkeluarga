@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { TreePine, Users, Home, LogIn, LogOut, Settings } from 'lucide-react';
+import { TreePine, Users, Home, LogIn, LogOut, Settings, Images } from 'lucide-react';
 
 export function Navbar() {
   const location = useLocation();
@@ -33,6 +33,12 @@ export function Navbar() {
             <Link to="/members" className={`navbar-link ${isActive('/members') ? 'active' : ''}`}>
               <Users size={18} />
               Anggota
+            </Link>
+          </li>
+          <li>
+            <Link to="/gallery" className={`navbar-link ${isActive('/gallery') ? 'active' : ''}`}>
+              <Images size={18} />
+              Galeri
             </Link>
           </li>
 
