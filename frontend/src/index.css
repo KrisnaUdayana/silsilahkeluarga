@@ -195,6 +195,202 @@ body {
   @apply bg-white border-t border-slate-100 py-5 mt-auto text-center text-slate-500 text-sm;
 }
 
+/* Tree view */
+.tree-page-shell {
+  --tree-line: #9aa8b8;
+  --tree-column-gap: 42px;
+  height: calc(100vh - 80px);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(22, 101, 52, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 101, 52, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(132, 204, 22, 0.18), transparent 36%),
+    #f8fafc;
+  background-size: 28px 28px, 28px 28px, auto, auto;
+}
+
+.tree-toolbar {
+  @apply absolute left-6 right-6 top-5 z-10 flex items-center justify-between gap-4 border border-white/80 bg-white/90 px-5 py-4 shadow-lg shadow-slate-200/60 backdrop-blur;
+  border-radius: 8px;
+}
+
+.tree-toolbar h1 {
+  @apply text-2xl font-bold text-lime-950 leading-tight;
+}
+
+.tree-toolbar p {
+  @apply mt-1 text-sm font-semibold text-slate-500;
+}
+
+.tree-eyebrow {
+  @apply mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-lime-700;
+}
+
+.tree-stats {
+  @apply flex shrink-0 overflow-hidden border border-slate-200 bg-slate-50;
+  border-radius: 8px;
+}
+
+.tree-stats div {
+  @apply min-w-[90px] border-r border-slate-200 px-4 py-2 text-center last:border-r-0;
+}
+
+.tree-stats strong {
+  @apply block text-lg leading-tight text-lime-900;
+}
+
+.tree-stats span {
+  @apply block text-[11px] font-semibold uppercase tracking-wide text-slate-500;
+}
+
+.tree-zoom-controls {
+  @apply absolute bottom-6 right-6 z-10 flex flex-col gap-1 border border-slate-200 bg-white p-1 shadow-xl shadow-slate-300/50;
+  border-radius: 8px;
+}
+
+.tree-zoom-controls button {
+  @apply flex h-10 w-10 items-center justify-center text-slate-600 transition hover:bg-lime-50 hover:text-lime-800;
+  border-radius: 6px;
+}
+
+.tree-hint {
+  @apply absolute bottom-6 left-6 z-10 flex items-center gap-2 border border-lime-100 bg-white/90 px-4 py-2 text-sm font-medium text-slate-500 shadow-lg shadow-slate-200/60 backdrop-blur;
+  border-radius: 8px;
+}
+
+.tree-canvas {
+  @apply min-w-max;
+}
+
+.tree-root-row {
+  @apply flex items-start justify-center gap-16;
+}
+
+.tree-family-node {
+  @apply flex flex-col items-center;
+}
+
+.tree-couple-card {
+  @apply flex items-center justify-center gap-3 border border-lime-100 bg-white/80 p-2 shadow-md shadow-slate-200/70 backdrop-blur;
+  border-radius: 8px;
+}
+
+.tree-person-card {
+  @apply relative flex w-[132px] min-h-[142px] cursor-pointer flex-col items-center border bg-white px-3 pb-3 pt-4 text-center shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-lime-100;
+  border-radius: 8px;
+}
+
+.tree-person-card-male {
+  @apply border-blue-200;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 70%);
+}
+
+.tree-person-card-female {
+  @apply border-pink-200;
+  background: linear-gradient(180deg, #fdf2f8 0%, #ffffff 70%);
+}
+
+.tree-generation-label {
+  @apply absolute left-2 top-2 text-[10px] font-bold uppercase tracking-wide text-slate-400;
+}
+
+.tree-avatar {
+  @apply mb-2 mt-2 flex h-11 w-11 items-center justify-center rounded-full text-white shadow-sm;
+}
+
+.tree-person-card-male .tree-avatar {
+  @apply bg-blue-600;
+}
+
+.tree-person-card-female .tree-avatar {
+  @apply bg-pink-600;
+}
+
+.tree-person-name {
+  @apply flex min-h-[34px] items-center text-sm font-bold leading-tight text-slate-800;
+}
+
+.tree-person-year {
+  @apply mt-1 text-xs font-medium text-slate-500;
+}
+
+.tree-gender-label {
+  @apply mt-2 border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500;
+  border-radius: 999px;
+}
+
+.tree-spouse-link {
+  @apply flex w-9 flex-col items-center gap-1 text-pink-500;
+}
+
+.tree-spouse-link span {
+  @apply h-px w-full bg-pink-200;
+}
+
+.tree-children-toggle {
+  @apply relative z-[2] mt-2 flex items-center gap-1 bg-lime-700 px-3 py-1 text-xs font-bold text-white shadow-md shadow-lime-900/20 transition hover:bg-lime-800;
+  border-radius: 999px;
+}
+
+.tree-branch {
+  @apply flex flex-col items-center;
+}
+
+.tree-line-vertical,
+.tree-line-horizontal {
+  @apply bg-slate-400;
+}
+
+.tree-line-vertical {
+  width: 2px;
+  height: 24px;
+}
+
+.tree-children-row {
+  @apply relative flex px-5;
+  gap: var(--tree-column-gap);
+}
+
+.tree-child-branch {
+  @apply relative flex flex-col items-center;
+}
+
+.tree-line-horizontal {
+  @apply absolute top-0 z-[1];
+  height: 2px;
+}
+
+.tree-line-to-child {
+  @apply relative z-[2];
+}
+
+@media (max-width: 768px) {
+  .tree-toolbar {
+    @apply left-3 right-3 top-3 flex-col items-start px-4 py-3;
+  }
+
+  .tree-toolbar h1 {
+    @apply text-xl;
+  }
+
+  .tree-stats {
+    @apply w-full;
+  }
+
+  .tree-stats div {
+    @apply min-w-0 flex-1 px-2;
+  }
+
+  .tree-hint {
+    @apply hidden;
+  }
+
+  .tree-zoom-controls {
+    @apply bottom-4 right-4;
+  }
+}
+
 /* Modal */
 .modal-overlay {
   @apply fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-6;
