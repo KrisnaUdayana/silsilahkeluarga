@@ -463,12 +463,14 @@ export function TreePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+  const [showDemoTree, setShowDemoTree] = useState(false);
 
   useEffect(() => {
     personApi
       .getTree()
       .then((data) => {
         setNodes(data.nodes);
+        setShowDemoTree(data.nodes.length === 0);
         setLoading(false);
       })
       .catch((err) => {
@@ -477,8 +479,8 @@ export function TreePage() {
       });
   }, []);
 
-  const displayNodes = nodes.length >= 20 ? nodes : DEMO_TREE_NODES;
-  const isDemoView = nodes.length < 20;
+  const displayNodes = showDemoTree ? DEMO_TREE_NODES : nodes;
+  const isDemoView = showDemoTree;
 
   const rootNodes = useMemo(
     () =>
@@ -544,18 +546,26 @@ export function TreePage() {
           <p>Pura Dalem Majapahit, Semarapura Kangin Klungkung</p>
         </div>
 
-        <div className="tree-stats" aria-label="Ringkasan pohon">
-          <div>
-            <strong>{familyHeadCount}</strong>
-            <span>KK</span>
-          </div>
-          <div>
-            <strong>{displayNodes.length}</strong>
-            <span>Anggota</span>
-          </div>
-          <div>
-            <strong>{rootNodes.length}</strong>
-            <span>Garis Utama</span>
+        <div className="tree-toolbar-actions">
+          {nodes.length > 0 && (
+            <button type="button" className="tree-demo-switch" onClick={() => setShowDemoTree((value) => !value)}>
+              {isDemoView ? 'Data asli' : 'Contoh 10 KK'}
+            </button>
+          )}
+
+          <div className="tree-stats" aria-label="Ringkasan pohon">
+            <div>
+              <strong>{familyHeadCount}</strong>
+              <span>KK</span>
+            </div>
+            <div>
+              <strong>{displayNodes.length}</strong>
+              <span>Anggota</span>
+            </div>
+            <div>
+              <strong>{rootNodes.length}</strong>
+              <span>Garis Utama</span>
+            </div>
           </div>
         </div>
       </div>

@@ -232,6 +232,15 @@ body {
   border-radius: 8px;
 }
 
+.tree-toolbar-actions {
+  @apply flex shrink-0 items-center gap-3;
+}
+
+.tree-demo-switch {
+  @apply border border-lime-200 bg-white px-4 py-2 text-sm font-bold text-lime-800 shadow-sm transition hover:border-lime-700 hover:bg-lime-50;
+  border-radius: 8px;
+}
+
 .tree-stats div {
   @apply min-w-[90px] border-r border-slate-200 px-4 py-2 text-center last:border-r-0;
 }
@@ -378,6 +387,10 @@ body {
     @apply w-full;
   }
 
+  .tree-toolbar-actions {
+    @apply w-full flex-col items-stretch;
+  }
+
   .tree-stats div {
     @apply min-w-0 flex-1 px-2;
   }
@@ -388,6 +401,212 @@ body {
 
   .tree-zoom-controls {
     @apply bottom-4 right-4;
+  }
+}
+
+/* Home company profile */
+.home-hero {
+  position: relative;
+  min-height: clamp(560px, 72vh, 760px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: url('/hero-tree.png') center/cover no-repeat;
+}
+
+.home-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(15, 23, 42, 0.82) 0%, rgba(30, 64, 30, 0.64) 46%, rgba(15, 23, 42, 0.16) 100%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.14), rgba(15, 23, 42, 0.42));
+}
+
+.home-hero-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-top: 64px;
+  padding-bottom: 92px;
+}
+
+.home-hero-content {
+  max-width: 760px;
+}
+
+.home-kicker {
+  @apply mb-5 inline-flex items-center gap-2 border border-white/25 bg-white/10 px-4 py-2 text-sm font-bold uppercase tracking-wide text-lime-100 backdrop-blur;
+  border-radius: 999px;
+}
+
+.home-hero h1 {
+  @apply max-w-4xl text-5xl font-bold leading-tight text-white md:text-6xl;
+}
+
+.home-hero p {
+  @apply mt-6 max-w-2xl text-lg leading-8 text-white/88;
+}
+
+.home-hero-actions {
+  @apply mt-9 flex flex-wrap gap-3;
+}
+
+.home-primary-action,
+.home-secondary-action {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold transition;
+  border-radius: 8px;
+}
+
+.home-primary-action {
+  @apply bg-white text-lime-950 shadow-xl shadow-black/20 hover:bg-lime-50;
+}
+
+.home-secondary-action {
+  @apply border border-white/35 bg-white/10 text-white backdrop-blur hover:bg-white/20;
+}
+
+.home-intro-section,
+.home-profile-section,
+.home-values-section,
+.home-cta-section {
+  @apply py-20;
+}
+
+.home-intro-section,
+.home-values-section {
+  @apply bg-white;
+}
+
+.home-profile-section,
+.home-cta-section {
+  @apply bg-slate-50;
+}
+
+.home-intro-grid,
+.home-values-grid,
+.home-cta-grid {
+  @apply grid grid-cols-1 gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start;
+}
+
+.home-section-label {
+  @apply mb-3 text-xs font-bold uppercase tracking-wide text-lime-700;
+}
+
+.home-intro-grid h2,
+.home-section-heading h2,
+.home-values-grid h2,
+.home-cta-grid h2 {
+  @apply max-w-3xl text-3xl font-bold leading-tight text-lime-950 md:text-4xl;
+}
+
+.home-intro-copy {
+  @apply space-y-5 text-base leading-8 text-slate-600;
+}
+
+.home-stats-section {
+  @apply border-y border-lime-100 bg-lime-950 py-9 text-white;
+}
+
+.home-stats-grid {
+  @apply grid grid-cols-2 gap-px overflow-hidden border border-white/10 bg-white/10 md:grid-cols-4;
+  border-radius: 8px;
+}
+
+.home-stat-item {
+  @apply bg-lime-950 px-5 py-6 text-center;
+}
+
+.home-stat-item strong {
+  @apply block text-3xl font-bold leading-tight text-white;
+}
+
+.home-stat-item span {
+  @apply mt-2 block text-sm font-semibold text-lime-100/75;
+}
+
+.home-section-heading {
+  @apply mb-10 max-w-4xl;
+}
+
+.home-highlight-grid {
+  @apply grid grid-cols-1 gap-5 md:grid-cols-3;
+}
+
+.home-highlight-card {
+  @apply border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-lg;
+  border-radius: 8px;
+}
+
+.home-highlight-icon {
+  @apply mb-5 flex h-12 w-12 items-center justify-center bg-lime-50 text-lime-800;
+  border-radius: 8px;
+}
+
+.home-highlight-card h3 {
+  @apply mb-3 text-xl font-bold text-slate-900;
+}
+
+.home-highlight-card p {
+  @apply leading-7 text-slate-500;
+}
+
+.home-values-panel {
+  @apply grid grid-cols-1 gap-3 sm:grid-cols-2;
+}
+
+.home-value-item {
+  @apply flex items-center gap-3 border border-lime-100 bg-lime-50 px-5 py-4 text-base font-bold text-lime-950;
+  border-radius: 8px;
+}
+
+.home-value-item svg {
+  @apply text-lime-700;
+}
+
+.home-cta-grid {
+  @apply lg:grid-cols-[1fr_auto] lg:items-center;
+}
+
+.home-cta-actions {
+  @apply flex flex-wrap gap-3 lg:justify-end;
+}
+
+.home-closing-band {
+  @apply bg-lime-950 py-8 text-white;
+}
+
+.home-closing-content {
+  @apply flex flex-col items-start gap-4 text-lg font-semibold leading-8 text-lime-50 md:flex-row md:items-center;
+}
+
+.home-closing-content svg {
+  @apply shrink-0 text-lime-200;
+}
+
+@media (max-width: 768px) {
+  .home-hero {
+    min-height: 640px;
+    background-position: 58% center;
+  }
+
+  .home-hero-overlay {
+    background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.86) 0%, rgba(30, 64, 30, 0.68) 58%, rgba(15, 23, 42, 0.24) 100%);
+  }
+
+  .home-hero h1 {
+    @apply text-4xl;
+  }
+
+  .home-hero p {
+    @apply text-base leading-7;
+  }
+
+  .home-intro-section,
+  .home-profile-section,
+  .home-values-section,
+  .home-cta-section {
+    @apply py-14;
   }
 }
 
