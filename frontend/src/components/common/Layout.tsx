@@ -9,7 +9,7 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="py-6 border-t border-slate-100 text-center text-slate-500 text-sm bg-white">
-        <p>© 2026 Silsilah Keluarga - Sistem Dokumentasi Silsilah Keluarga</p>
+        <p>&copy; 2026 Silsilah Keluarga - Sistem Dokumentasi Silsilah Keluarga</p>
       </footer>
     </div>
   );

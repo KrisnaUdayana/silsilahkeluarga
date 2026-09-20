@@ -8,6 +8,7 @@ import { HomePage } from './pages/Home';
 import { LoginPage } from './pages/Login';
 import { TreePage } from './pages/TreeView';
 import { MembersPage } from './pages/Members';
+import { GalleryPage } from './pages/Gallery';
 import { PersonDetailPage } from './pages/PersonDetail';
 import { AdminDashboard } from './pages/admin/Dashboard';
 
@@ -57,6 +58,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/tree" element={<TreePage />} />
           <Route path="/members" element={<MembersPage />} />
+          <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/members/:id" element={<PersonDetailPage />} />
 
           {/* Admin only routes */}
