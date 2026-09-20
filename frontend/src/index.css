@@ -277,17 +277,22 @@ body {
 }
 
 .tree-family-node {
-  @apply flex flex-col items-center;
+  @apply relative flex flex-col items-center;
+  z-index: 2;
 }
 
 .tree-couple-card {
-  @apply flex items-center justify-center gap-3 border border-lime-100 bg-white/80 p-2 shadow-md shadow-slate-200/70 backdrop-blur;
+  @apply relative flex items-center justify-center gap-3 bg-white p-2 shadow-md shadow-slate-200/70;
+  border: 1px solid rgba(214, 162, 30, 0.32);
   border-radius: 8px;
+  z-index: 3;
 }
 
 .tree-person-card {
-  @apply relative flex w-[132px] min-h-[142px] cursor-pointer flex-col items-center border bg-white px-3 pb-3 pt-4 text-center shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-lime-100;
+  @apply relative flex w-[132px] min-h-[142px] cursor-pointer flex-col items-center border bg-white px-3 pb-3 pt-4 text-center shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-4;
+  --tw-ring-color: rgba(214, 162, 30, 0.24);
   border-radius: 8px;
+  opacity: 1;
 }
 
 .tree-person-card-male {
@@ -337,13 +342,41 @@ body {
   @apply h-px w-full bg-pink-200;
 }
 
-.tree-children-toggle {
-  @apply relative z-[2] mt-2 flex items-center gap-1 bg-lime-700 px-3 py-1 text-xs font-bold text-white shadow-md shadow-lime-900/20 transition hover:bg-lime-800;
+.tree-spouse-list {
+  @apply flex flex-wrap items-center justify-center gap-3;
+}
+
+.tree-spouse-item {
+  @apply flex items-center gap-3;
+}
+
+.tree-multi-spouse-branches {
+  @apply relative mt-3 flex items-start justify-center gap-8;
+  z-index: 2;
+}
+
+.tree-spouse-family {
+  @apply relative flex flex-col items-center;
+  z-index: 3;
+}
+
+.tree-spouse-family-label {
+  @apply relative z-[5] mb-1 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-600 shadow-sm;
+  border: 1px solid rgba(214, 162, 30, 0.35);
   border-radius: 999px;
 }
 
+.tree-children-toggle {
+  @apply relative mt-2 inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-bold text-white bg-lime-700 hover:bg-lime-800 rounded-full shadow-md shadow-lime-950/20 border-2 border-lime-700 transition-all transform hover:scale-105 active:scale-95 cursor-pointer z-20;
+}
+
+.tree-children-toggle svg {
+  @apply text-white stroke-[2.5];
+}
+
 .tree-branch {
-  @apply flex flex-col items-center;
+  @apply relative flex flex-col items-center;
+  z-index: 1;
 }
 
 .tree-line-vertical,
@@ -401,6 +434,10 @@ body {
 
   .tree-zoom-controls {
     @apply bottom-4 right-4;
+  }
+
+  .tree-multi-spouse-branches {
+    @apply flex-col gap-5;
   }
 }
 

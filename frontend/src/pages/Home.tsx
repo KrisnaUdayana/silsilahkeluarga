@@ -1,35 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpenText, Building2, HeartHandshake, Landmark, Network, ShieldCheck, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { statsApi } from '../services/api';
-
-const profileHighlights = [
-  {
-    icon: Landmark,
-    title: 'Identitas Keluarga',
-    description: 'Menyatukan informasi keluarga besar dalam satu arsip digital yang tertata, mudah dicari, dan mudah diperbarui.',
-  },
-  {
-    icon: Network,
-    title: 'Peta Kekerabatan',
-    description: 'Menampilkan hubungan antar generasi secara visual sehingga garis keluarga dapat dipahami dengan cepat.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Warisan Terjaga',
-    description: 'Membantu menjaga nama, cerita, dan nilai keluarga agar tetap dikenal oleh generasi berikutnya.',
-  },
-];
-
-const values = ['Sejarah', 'Kebersamaan', 'Tanggung Jawab', 'Pengabdian'];
+import { ArrowRight } from 'lucide-react';
 
 export function HomePage() {
-  const [stats, setStats] = useState<{ totalPersons: number; totalMarriages: number } | null>(null);
-
-  useEffect(() => {
-    statsApi.getPublicStats().then(setStats).catch(console.error);
-  }, []);
-
   return (
     <div className="min-h-screen bg-white">
       <section className="home-hero">

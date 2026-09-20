@@ -271,10 +271,77 @@ const formatYear = (date?: string | null) => {
 
 const shortName = (node: TreeNode) => node.nickname || node.fullName.split(' ').slice(0, 3).join(' ');
 
-const getChildren = (node: TreeNode, allNodes: TreeNode[]) =>
-  allNodes
-    .filter((item) => item.fatherId === node.id || item.motherId === node.id)
-    .sort((a, b) => Number(new Date(a.birthDate || '9999')) - Number(new Date(b.birthDate || '9999')));
+const sortByBirthDate = (items: TreeNode[]) =>
+  [...items].sort((a, b) => Number(new Date(a.birthDate || '9999')) - Number(new Date(b.birthDate || '9999')));
+
+const getSpouses = (node: TreeNode, allNodes: TreeNode[]) =>
+  sortByBirthDate(node.spouseIds.map((id) => allNodes.find((item) => item.id === id)).filter(Boolean) as TreeNode[]);
+
+const isChildOf = (child: TreeNode, parent: TreeNode) => child.fatherId === parent.id || child.motherId === parent.id;
+
+const getOtherParentId = (child: TreeNode, parent: TreeNode) => (parent.gender === 'MALE' ? child.motherId : child.fatherId);
+
+const getChildren = (node: TreeNode, allNodes: TreeNode[]) => {
+  const directChildren = allNodes.filter((item) => isChildOf(item, node) && !node.spouseIds.includes(item.id));
+  const directChildIds = new Set(directChildren.map((item) => item.id));
+
+  return sortByBirthDate(
+    directChildren.filter((child) => {
+      const spouseInSameSiblingRow = child.spouseIds
+        .map((spouseId) => allNodes.find((item) => item.id === spouseId))
+        .find((spouse) => spouse && directChildIds.has(spouse.id));
+
+      return !(spouseInSameSiblingRow && child.gender === 'FEMALE' && spouseInSameSiblingRow.gender === 'MALE');
+    }),
+  );
+};
+
+const getChildrenForSpouse = (node: TreeNode, spouse: TreeNode, allNodes: TreeNode[]) =>
+  sortByBirthDate(allNodes.filter((child) => isChildOf(child, node) && getOtherParentId(child, node) === spouse.id));
+
+const getChildrenWithoutKnownSpouse = (node: TreeNode, spouses: TreeNode[], allNodes: TreeNode[]) => {
+  const spouseIds = new Set(spouses.map((spouse) => spouse.id));
+  return sortByBirthDate(
+    allNodes.filter((child) => isChildOf(child, node) && !child.spouseIds.includes(node.id) && !spouseIds.has(getOtherParentId(child, node) || '')),
+  );
+};
+
+function ChildrenBranch({
+  children,
+  allNodes,
+  level,
+  onSelect,
+}: {
+  children: TreeNode[];
+  allNodes: TreeNode[];
+  level: number;
+  onSelect: (node: TreeNode) => void;
+}) {
+  if (children.length === 0) return null;
+
+  return (
+    <div className="tree-branch">
+      <div className="tree-line-vertical" />
+      <div className="tree-children-row">
+        {children.map((child, index) => (
+          <div key={child.id} className="tree-child-branch">
+            {children.length > 1 && (
+              <div
+                className="tree-line-horizontal"
+                style={{
+                  left: index === 0 ? '50%' : 'calc(var(--tree-column-gap) / -2)',
+                  right: index === children.length - 1 ? '50%' : 'calc(var(--tree-column-gap) / -2)',
+                }}
+              />
+            )}
+            <div className="tree-line-vertical tree-line-to-child" />
+            <FamilyNode node={child} allNodes={allNodes} level={level + 1} onSelect={onSelect} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function PersonCard({ node, level, onSelect }: { node: TreeNode; level: number; onSelect: (node: TreeNode) => void }) {
   const genderLabel = node.gender === 'MALE' ? 'Laki-laki' : 'Perempuan';
@@ -309,53 +376,63 @@ function PersonCard({ node, level, onSelect }: { node: TreeNode; level: number; 
 
 function FamilyNode({ node, allNodes, level, onSelect }: FamilyNodeProps) {
   const [expanded, setExpanded] = useState(level < 3);
+  const spouses = getSpouses(node, allNodes);
+  const singleParentChildren = getChildrenWithoutKnownSpouse(node, spouses, allNodes);
+  const spouseFamilies = spouses.map((spouse) => ({
+    spouse,
+    children: getChildrenForSpouse(node, spouse, allNodes),
+  }));
   const children = getChildren(node, allNodes);
-  const spouse = allNodes.find((item) => node.spouseIds.includes(item.id));
+  const totalChildren = spouseFamilies.reduce((total, family) => total + family.children.length, singleParentChildren.length);
 
   return (
     <div className="tree-family-node">
       <div className="tree-couple-card">
         <PersonCard node={node} level={level} onSelect={onSelect} />
 
-        {spouse && (
-          <>
-            <div className="tree-spouse-link" aria-hidden="true">
-              <span />
-              <Heart size={14} fill="currentColor" />
-              <span />
-            </div>
-            <PersonCard node={spouse} level={level} onSelect={onSelect} />
-          </>
-        )}
-      </div>
-
-      {children.length > 0 && (
-        <button type="button" className="tree-children-toggle" onClick={() => setExpanded((value) => !value)}>
-          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          {children.length} anak
-        </button>
-      )}
-
-      {expanded && children.length > 0 && (
-        <div className="tree-branch">
-          <div className="tree-line-vertical" />
-          <div className="tree-children-row">
-            {children.map((child, index) => (
-              <div key={child.id} className="tree-child-branch">
-                {children.length > 1 && (
-                  <div
-                    className="tree-line-horizontal"
-                    style={{
-                      left: index === 0 ? '50%' : 'calc(var(--tree-column-gap) / -2)',
-                      right: index === children.length - 1 ? '50%' : 'calc(var(--tree-column-gap) / -2)',
-                    }}
-                  />
-                )}
-                <div className="tree-line-vertical tree-line-to-child" />
-                <FamilyNode node={child} allNodes={allNodes} level={level + 1} onSelect={onSelect} />
+        {spouses.length > 0 && (
+          <div className="tree-spouse-list">
+            {spouses.map((spouse) => (
+              <div className="tree-spouse-item" key={spouse.id}>
+                <div className="tree-spouse-link" aria-hidden="true">
+                  <span />
+                  <Heart size={14} fill="currentColor" />
+                  <span />
+                </div>
+                <PersonCard node={spouse} level={level} onSelect={onSelect} />
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      {totalChildren > 0 && (
+        <button type="button" className="tree-children-toggle" onClick={() => setExpanded((value) => !value)}>
+          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          {totalChildren} anak
+        </button>
+      )}
+
+      {expanded && totalChildren > 0 && spouses.length <= 1 && (
+        <ChildrenBranch children={children} allNodes={allNodes} level={level} onSelect={onSelect} />
+      )}
+
+      {expanded && totalChildren > 0 && spouses.length > 1 && (
+        <div className="tree-multi-spouse-branches">
+          {spouseFamilies
+            .filter((family) => family.children.length > 0)
+            .map((family) => (
+              <div className="tree-spouse-family" key={family.spouse.id}>
+                <div className="tree-spouse-family-label">dengan {shortName(family.spouse)}</div>
+                <ChildrenBranch children={family.children} allNodes={allNodes} level={level} onSelect={onSelect} />
+              </div>
+            ))}
+          {singleParentChildren.length > 0 && (
+            <div className="tree-spouse-family">
+              <div className="tree-spouse-family-label">tanpa pasangan tercatat</div>
+              <ChildrenBranch children={singleParentChildren} allNodes={allNodes} level={level} onSelect={onSelect} />
+            </div>
+          )}
         </div>
       )}
     </div>

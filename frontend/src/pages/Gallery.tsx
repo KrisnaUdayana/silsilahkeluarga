@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
   Camera,
@@ -131,19 +131,6 @@ export function GalleryPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Keyboard navigation for lightbox
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!lightbox) return;
-      if (e.key === 'Escape') setLightbox(null);
-      if (e.key === 'ArrowRight') nextMedia();
-      if (e.key === 'ArrowLeft') prevMedia();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightbox]);
-
   const displayYears = galleryYears.length > 0 ? galleryYears : demoGalleryYears;
   const totalEvents = displayYears.reduce((total, item) => total + item.events.length, 0);
   const isDemo = !loading && galleryYears.length === 0;
@@ -161,8 +148,7 @@ export function GalleryPage() {
     });
   };
 
-  const nextMedia = () => {
-    if (!lightbox) return;
+  const nextMedia = useCallback(() => {
     setLightbox((prev) =>
       prev
         ? {
@@ -171,10 +157,9 @@ export function GalleryPage() {
           }
         : null,
     );
-  };
+  }, []);
 
-  const prevMedia = () => {
-    if (!lightbox) return;
+  const prevMedia = useCallback(() => {
     setLightbox((prev) =>
       prev
         ? {
@@ -183,7 +168,20 @@ export function GalleryPage() {
           }
         : null,
     );
-  };
+  }, []);
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!lightbox) return;
+      if (e.key === 'Escape') setLightbox(null);
+      if (e.key === 'ArrowRight') nextMedia();
+      if (e.key === 'ArrowLeft') prevMedia();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightbox, nextMedia, prevMedia]);
 
   const currentMedia = lightbox ? lightbox.mediaList[lightbox.currentIndex] : null;
   const ytEmbedUrl = currentMedia && currentMedia.mediaType === 'VIDEO' ? getYouTubeEmbedUrl(currentMedia.url) : null;
