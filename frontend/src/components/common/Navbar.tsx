@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { TreePine, Users, Home, LogIn, LogOut, Settings, Images } from 'lucide-react';
+import { LogIn, LogOut } from 'lucide-react';
 
 export function Navbar() {
   const location = useLocation();
@@ -10,7 +10,7 @@ export function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="container navbar-inner">
+      <div className="w-full px-4 sm:px-8 navbar-inner">
         <Link to="/" className="navbar-brand flex items-center gap-3">
           <img src="/logomajapahit.png" alt="Logo Silsilah" className="h-9 w-9 object-contain" />
           <span className="text-lime-900 font-bold tracking-tight">Silsilah Keluarga</span>
@@ -19,33 +19,23 @@ export function Navbar() {
         <ul className="navbar-nav">
           <li>
             <Link to="/" className={`navbar-link ${isActive('/') ? 'active' : ''}`}>
-              <Home size={18} />
               Beranda
             </Link>
           </li>
           <li>
             <Link to="/tree" className={`navbar-link ${isActive('/tree') ? 'active' : ''}`}>
-              <TreePine size={18} />
               Pohon Silsilah
             </Link>
           </li>
           <li>
             <Link to="/members" className={`navbar-link ${isActive('/members') ? 'active' : ''}`}>
-              <Users size={18} />
               Anggota
-            </Link>
-          </li>
-          <li>
-            <Link to="/gallery" className={`navbar-link ${isActive('/gallery') ? 'active' : ''}`}>
-              <Images size={18} />
-              Galeri
             </Link>
           </li>
 
           {isAuthenticated && user?.role === 'ADMIN' && (
             <li>
               <Link to="/admin" className={`navbar-link ${isActive('/admin') ? 'active' : ''}`}>
-                <Settings size={18} />
                 Admin
               </Link>
             </li>

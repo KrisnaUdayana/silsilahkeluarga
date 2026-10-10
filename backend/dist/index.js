@@ -14,7 +14,6 @@ const marriage_routes_1 = __importDefault(require("./routes/marriage.routes"));
 const media_routes_1 = __importDefault(require("./routes/media.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const stats_routes_1 = __importDefault(require("./routes/stats.routes"));
-const gallery_routes_1 = __importDefault(require("./routes/gallery.routes"));
 const http_1 = require("./utils/http");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -35,7 +34,6 @@ app.use('/api/marriages', marriage_routes_1.default);
 app.use('/api/media', media_routes_1.default);
 app.use('/api/users', user_routes_1.default);
 app.use('/api/stats', stats_routes_1.default);
-app.use('/api/gallery', gallery_routes_1.default);
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

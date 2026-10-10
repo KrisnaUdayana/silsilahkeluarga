@@ -8,7 +8,6 @@ Aplikasi berbasis web untuk visualisasi dan dokumentasi silsilah keluarga lintas
 - 👥 **Manajemen Data Keluarga** - CRUD anggota keluarga (Admin)
 - 🔐 **Kontrol Akses** - Role-based (Admin/Viewer)
 - 💑 **Relasi Keluarga** - Orang tua, anak, dan pasangan
-- 📷 **Galeri Foto** - Upload foto anggota
 - 📊 **Dashboard Statistik** - Ringkasan data keluarga
 
 ## 🚀 Quick Start

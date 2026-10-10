@@ -10,7 +10,6 @@ import marriageRoutes from './routes/marriage.routes';
 import mediaRoutes from './routes/media.routes';
 import userRoutes from './routes/user.routes';
 import statsRoutes from './routes/stats.routes';
-import galleryRoutes from './routes/gallery.routes';
 import { getAllowedOrigins } from './utils/http';
 
 dotenv.config();
@@ -36,7 +35,6 @@ app.use('/api/marriages', marriageRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
-app.use('/api/gallery', galleryRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

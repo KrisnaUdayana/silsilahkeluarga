@@ -12,12 +12,10 @@ import {
   UserPlus,
   Edit,
   Trash2,
-  Plus,
-  Images
+  Plus
 } from 'lucide-react';
-import { GalleryAdmin } from './GalleryAdmin';
 
-type AdminTab = 'overview' | 'persons' | 'gallery' | 'users';
+type AdminTab = 'overview' | 'persons' | 'users';
 
 type ApiErrorBody = {
   error?: string;
@@ -205,7 +203,6 @@ export function AdminDashboard() {
           {[
             { id: 'overview', label: 'Ringkasan', icon: TreePine },
             { id: 'persons', label: 'Anggota', icon: Users },
-            { id: 'gallery', label: 'Galeri', icon: Images },
             { id: 'users', label: 'Pengguna', icon: UserPlus }
           ].map(tab => (
             <button
@@ -394,7 +391,6 @@ export function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'gallery' && <GalleryAdmin />}
       </div>
 
       {/* Add/Edit Modal */}
