@@ -10,6 +10,9 @@ import { TreePage } from './pages/TreeView';
 import { MembersPage } from './pages/Members';
 import { PersonDetailPage } from './pages/PersonDetail';
 import { AdminDashboard } from './pages/admin/Dashboard';
+import { KnowledgeLayout } from './components/knowledge/KnowledgeLayout';
+import { KnowledgeIndexPage, KnowledgeArticlePage } from './pages/Knowledge';
+import { SourcePage } from './pages/Source';
 
 import './index.css';
 
@@ -51,9 +54,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route element={<KnowledgeLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/pengetahuan" element={<KnowledgeIndexPage />} />
+          <Route path="/pengetahuan/:slug" element={<KnowledgeArticlePage />} />
+          <Route path="/sumber" element={<SourcePage />} />
+        </Route>
         <Route element={<Layout />}>
           {/* Public routes - no login required */}
-          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/tree" element={<TreePage />} />
           <Route path="/members" element={<MembersPage />} />
